@@ -1,3 +1,13 @@
+import os
+import sys
+if sys.platform == 'win64':
+    sys.path.append(os.path.expanduser('C:/Users/10485/Desktop/科研训练/uavenv'))
+else:
+    sys.path.append(os.path.expanduser('~/Desktop/科研训练/uav env'))
+from UAVenv.uav.uav import systemEnv
+os.environ['PARL_BACKEND'] = 'torch'
+import warnings
+
 import gym
 import argparse
 import numpy as np
@@ -71,7 +81,6 @@ def main():
     logger.info("------------------- SAC ---------------------")
     logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
     logger.info("---------------------------------------------")
-    logger.set_dir('./{}_{}'.format(args.env, args.seed))
 
     env = gym.make(args.env)
     # Compatible for different versions of gym
@@ -117,26 +126,10 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--env", default="HalfCheetah-v4", help='Mujoco gym environment name')
+    parser.add_argument("--env", default="uav-v0", help='Mujoco gym environment name')
     parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
-    parser.add_argument(
-        "--train_total_steps",
-        default=3e6,
-        type=int,
-        help='Max time steps to run environment')
-    parser.add_argument(
-        '--test_every_steps',
-        type=int,
-        default=int(5e3),
-        help='The step interval between two consecutive evaluations')
-    parser.add_argument(
-        "--alpha",
-        default=0.2,
-        type=float,
-        help=
-        'Determines the relative importance of entropy term against the reward'
-    )
+    parser.add_argument("--train_total_steps", default=3e6, type=int, help='Max time steps to run environment')
+    parser.add_argument('--test_every_steps', type=int, default=int(5e3), help='The step interval between two consecutive evaluations')
+    parser.add_argument("--alpha", default=0.2, type=float, help='Determines the relative importance of entropy term against the reward')
     args = parser.parse_args()
-
     main()
