@@ -26,13 +26,13 @@ class MujocoAgent(parl.Agent):
     def predict(self, obs):
         obs = torch.tensor(obs.reshape(1, -1), dtype=torch.float32)
         action = self.alg.predict(obs)
-        action_numpy = action.cpu().numpy()[0]
+        action_numpy = action.cpu().detach().numpy()[0]
         return action_numpy
 
     def sample(self, obs):
         obs = torch.tensor(obs.reshape(1, -1), dtype=torch.float32)
         action, _ = self.alg.sample(obs)
-        action_numpy = action.cpu().numpy()[0]
+        action_numpy = action.cpu().detach().numpy()[0]
         return action_numpy
 
     def learn(self, obs, action, reward, next_obs, terminal):

@@ -1,0 +1,13 @@
+[32m[08-21 23:03:17 MainThread @train.py:105][0m Total Steps: 1000 Reward: -224.91754658688174
+[32m[08-21 23:03:18 MainThread @train.py:114][0m Evaluation over: 5 episodes, Reward: 0.32744106692110486
+[32m[08-21 23:03:18 MainThread @train.py:105][0m Total Steps: 2000 Reward: -246.55844879149632
+[32m[08-21 23:03:18 MainThread @train.py:105][0m Total Steps: 3000 Reward: -417.00033467191537
+[32m[08-21 23:03:18 MainThread @train.py:105][0m Total Steps: 4000 Reward: -406.268651780933
+[32m[08-21 23:03:18 MainThread @train.py:105][0m Total Steps: 5000 Reward: -284.76653029269903
+[32m[08-21 23:03:19 MainThread @train.py:114][0m Evaluation over: 5 episodes, Reward: 0.32744106692110486
+[32m[08-21 23:03:19 MainThread @train.py:105][0m Total Steps: 6000 Reward: -369.31494352502625
+[32m[08-21 23:03:19 MainThread @train.py:105][0m Total Steps: 7000 Reward: -214.56883171816847
+[32m[08-21 23:03:19 MainThread @train.py:105][0m Total Steps: 8000 Reward: -12.344342920933068
+[32m[08-21 23:03:19 MainThread @train.py:105][0m Total Steps: 9000 Reward: -304.4763226696446
+[32m[08-21 23:03:19 MainThread @train.py:105][0m Total Steps: 10000 Reward: -203.72416288461173
+[32m[08-21 23:03:20 MainThread @train.py:114][0m Evaluation over: 5 episodes, Reward: 0.27801463386513725
