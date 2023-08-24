@@ -18,14 +18,15 @@ from uav_agent import Agent
 from algorithm import SAC
 import pandas as pd
 
-WARMUP_STEPS = 1e2
-EVAL_EPISODES = 5
+LEARN_FREQ = 10
+WARMUP_STEPS = 1e3
+EVAL_EPISODES = 1
 MEMORY_SIZE = int(1e6)
-BATCH_SIZE = 256
+BATCH_SIZE = 64
 GAMMA = 0.99
 TAU = 0.005
-ACTOR_LR = 3e-4
-CRITIC_LR = 3e-4
+ACTOR_LR = 0.01
+CRITIC_LR = 0.01
 
 # Run episode for training
 def run_train_episode(agent, env, rpm):
@@ -44,7 +45,7 @@ def run_train_episode(agent, env, rpm):
         obs = next_obs
         episode_reward += reward
         # Train agent after collecting sufficient data
-        if rpm[0].size() >= WARMUP_STEPS:
+        if (rpm[0].size() >= WARMUP_STEPS) and (episode_steps % LEARN_FREQ == 0):
             batch_obs, batch_action, batch_reward, batch_next_obs, batch_done = [], [], [], [], []
             for i in range(env.n_clusters):
                 _obs, _act, _rew, _next_obs, _done = rpm[i].sample_batch(BATCH_SIZE)
@@ -68,7 +69,6 @@ def run_train_episode(agent, env, rpm):
 
 
 # Runs policy for 5 episodes by default and returns average reward
-# A fixed seed is used for the eval environment
 def run_evaluate_episodes(agent, env, eval_episodes):
     avg_reward = 0.
     for _ in range(eval_episodes):
@@ -84,12 +84,7 @@ def run_evaluate_episodes(agent, env, eval_episodes):
 
 
 def main():
-    logger.info("------------------- SAC ---------------------")
-    logger.info('Env: {}, Seed: {}'.format(args.env, args.seed))
-    logger.info("---------------------------------------------")
-
     env = CompatWrapper(systemEnv())
-    env.seed(args.seed)
     obs_dim = env.observation_space[0].shape
     action_dim = env.action_space[0].nvec
     n_clusters = env.n_clusters
@@ -107,7 +102,7 @@ def main():
         # Train episode
         episode_reward, episode_steps = run_train_episode(agent, env, rpm)
         total_steps += episode_steps
-        logger.info('Total Steps: {} Reward: {}'.format(total_steps, episode_reward))
+        # logger.info('Total Steps: {} Reward: {}'.format(total_steps, episode_reward))
 
         # Evaluate episode
         avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
@@ -119,7 +114,6 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", default="uav-v0", help='Mujoco gym environment name')
-    parser.add_argument("--seed", default=0, type=int, help='Sets Gym seed')
     parser.add_argument("--train_total_steps", default=3e6, type=int, help='Max time steps to run environment')
     parser.add_argument('--test_every_steps', type=int, default=int(5e3), help='The step interval between two consecutive evaluations')
     parser.add_argument("--alpha", default=0.2, type=float, help='Determines the relative importance of entropy term against the reward')

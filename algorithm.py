@@ -43,16 +43,20 @@ class SAC(parl.Algorithm):
 
     def sample(self, obs):
         logits = self.model.policy(obs)
-        action = torch.zeros(size=(self.model.n_clusters, len(self.model.action_dim), self.model.batch_size), dtype=torch.int64)
-        action_log_probs = torch.zeros(size=(self.model.n_clusters, len(self.model.action_dim), self.model.batch_size))
+        actions = []
+        log_probs = []
         for i in range(self.model.n_clusters):
+            action = []
+            log_prob = []
             for j in range(len(self.model.action_dim)):
                 dist = Categorical(logits=logits[i][j])
-                action[i][j] = dist.sample()
-                action_log_probs[i][j] = dist.log_prob(action[i][j])
-        loss = action_log_probs.mean()
-        loss.backward()
-        return action, action_log_probs
+                action.append(dist.sample())
+                log_prob.append(dist.log_prob(action[-1]))
+            actions.append(torch.stack(action, dim=1))
+            log_probs.append(torch.stack(log_prob, dim=1))
+        act = torch.stack(actions, dim=0)
+        log_p = torch.stack(log_probs, dim=0)
+        return act, log_p
 
 
 
@@ -66,8 +70,8 @@ class SAC(parl.Algorithm):
     def _critic_learn(self, obs, action, reward, next_obs, terminal):
         with torch.no_grad():
             next_action, next_log_pro = self.sample(next_obs)
-            q1_next, q2_next = self.target_model.value(next_obs, next_action)
-            target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro.transpose(2, 1)
+            q1_next, q2_next = self.target_model.value(next_obs, next_action.transpose(2, 1))
+            target_Q = torch.min(q1_next, q2_next) - self.alpha * q1_next
             target_Q = reward.unsqueeze(2) + self.gamma * (1. - terminal.unsqueeze(2)) * target_Q
         cur_q1, cur_q2 = self.model.value(obs, action.transpose(2, 1))
 
@@ -80,10 +84,9 @@ class SAC(parl.Algorithm):
 
     def _actor_learn(self, obs):
         act, log_pi = self.sample(obs)
-        q1_pi, q2_pi = self.model.value(obs, act)
+        q1_pi, q2_pi = self.model.value(obs, act.transpose(2, 1))
         min_q_pi = torch.min(q1_pi, q2_pi)
-        actor_loss = ((self.alpha * log_pi) - min_q_pi.transpose(1, 2)).mean()
-        # actor_loss = ((self.alpha) - min_q_pi.transpose(1, 2)).mean()
+        actor_loss = ((self.alpha * log_pi) - min_q_pi).mean()
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
