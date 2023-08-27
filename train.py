@@ -12,7 +12,7 @@ import gym
 import argparse
 import numpy as np
 from parl.utils import logger, summary, ReplayMemory
-from parl.env import ActionMappingWrapper, CompatWrapper
+from env_utils import Wapper
 from uav_model import uavModel
 from uav_agent import Agent
 from algorithm import SAC
@@ -28,9 +28,13 @@ TAU = 0.005
 ACTOR_LR = 0.01
 CRITIC_LR = 0.01
 
+def task_generator():# 生成seed
+    task = np.random.randint(0, 1e9)
+    return task
+
 # Run episode for training
-def run_train_episode(agent, env, rpm):
-    obs = env.reset()
+def run_train_episode(agent, env, rpm, task):
+    obs, _ = env.reset(task)
     episode_reward = 0
     episode_steps = 0
     while True:
@@ -69,10 +73,10 @@ def run_train_episode(agent, env, rpm):
 
 
 # Runs policy for 5 episodes by default and returns average reward
-def run_evaluate_episodes(agent, env, eval_episodes):
+def run_evaluate_episodes(agent, env, eval_episodes, task):
     avg_reward = 0.
     for _ in range(eval_episodes):
-        obs = env.reset()
+        obs, _ = env.reset(task)
         while True:
             action = agent.predict(obs)
             obs, reward, done, _ = env.step(action)
@@ -84,10 +88,11 @@ def run_evaluate_episodes(agent, env, eval_episodes):
 
 
 def main():
-    env = CompatWrapper(systemEnv())
-    obs_dim = env.observation_space[0].shape
-    action_dim = env.action_space[0].nvec
-    n_clusters = env.n_clusters
+    env = Wapper(systemEnv())
+
+    obs_dim = env.obs_space
+    action_dim = env.act_space
+    n_clusters = env.n_clusters 
 
     # Initialize model, algorithm, agent, replay_memory
     model = uavModel(obs_dim, action_dim, n_clusters, BATCH_SIZE)
@@ -100,12 +105,13 @@ def main():
     data = []
     while total_steps < args.train_total_steps:
         # Train episode
-        episode_reward, episode_steps = run_train_episode(agent, env, rpm)
+        task = task_generator()
+        episode_reward, episode_steps = run_train_episode(agent, env, rpm, task)
         total_steps += episode_steps
         # logger.info('Total Steps: {} Reward: {}'.format(total_steps, episode_reward))
 
         # Evaluate episode
-        avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES)
+        avg_reward = run_evaluate_episodes(agent, env, EVAL_EPISODES, task)
         logger.info('Evaluation over: {} episodes, Reward: {}'.format(EVAL_EPISODES, avg_reward))
         data.append(avg_reward)
         Temp = pd.DataFrame(data)

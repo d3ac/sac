@@ -58,8 +58,6 @@ class SAC(parl.Algorithm):
         log_p = torch.stack(log_probs, dim=0)
         return act, log_p
 
-
-
     def learn(self, obs, action, reward, next_obs, terminal):
         critic_loss = self._critic_learn(obs, action, reward, next_obs, terminal)
         actor_loss = self._actor_learn(obs)
@@ -71,7 +69,7 @@ class SAC(parl.Algorithm):
         with torch.no_grad():
             next_action, next_log_pro = self.sample(next_obs)
             q1_next, q2_next = self.target_model.value(next_obs, next_action.transpose(2, 1))
-            target_Q = torch.min(q1_next, q2_next) - self.alpha * q1_next
+            target_Q = torch.min(q1_next, q2_next) - self.alpha * next_log_pro
             target_Q = reward.unsqueeze(2) + self.gamma * (1. - terminal.unsqueeze(2)) * target_Q
         cur_q1, cur_q2 = self.model.value(obs, action.transpose(2, 1))
 
